@@ -1,0 +1,30 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+
+# Local databases, logs, and exported/private data
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.csv
+*.xls
+*.xlsx
+*.doc
+*.docx
+*.ppt
+*.pptx
+/alertas_enviados.json
+/historico*.json
+/impressoras_*.json
+/.relatorio_locais_equivalentes.json
+/Untitled-1.txt
+
+# Office lock files
+~$*
+
+# Python and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/

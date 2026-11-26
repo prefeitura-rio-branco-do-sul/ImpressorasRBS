@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ativar acesso - Monitor de Impressoras</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            display: grid;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            place-items: center;
+            background: #f4f6f9;
+            color: #17212b;
+            font-family: Arial, sans-serif;
+        }
+        main {
+            width: min(100%, 420px);
+            padding: 28px;
+            border: 1px solid #e1e6eb;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, .1);
+        }
+        h1 { margin: 0 0 8px; font-size: 1.4rem; }
+        p { color: #5b6573; line-height: 1.5; }
+        label { display: block; margin: 16px 0 8px; font-weight: 700; }
+        input, button {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 8px;
+            font: inherit;
+        }
+        input { padding: 10px 12px; border: 1px solid #b8c2cc; }
+        button {
+            margin-top: 16px;
+            border: 0;
+            background: #0a4527;
+            color: white;
+            font-weight: 700;
+        }
+        .erro { color: #b42318; }
+    </style>
+</head>
+<body>
+    <main>
+        {% if convite_valido %}
+        <h1>Olá, {{ nome }}</h1>
+        <p>Este convite individual foi preparado pela administração. Crie seu usuário e sua senha para ativar o acesso.</p>
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="usuario">Nome de usuário</label>
+            <input
+                id="usuario"
+                name="usuario"
+                type="text"
+                minlength="3"
+                maxlength="32"
+                pattern="[A-Za-z0-9._-]{3,32}"
+                autocomplete="username"
+                required
+                autofocus>
+            <label for="senha">Senha (mínimo de 8 caracteres)</label>
+            <input
+                id="senha"
+                name="senha"
+                type="password"
+                minlength="8"
+                autocomplete="new-password"
+                required>
+            <label for="confirmar_senha">Confirme a senha</label>
+            <input
+                id="confirmar_senha"
+                name="confirmar_senha"
+                type="password"
+                minlength="8"
+                autocomplete="new-password"
+                required>
+            <button type="submit">Criar meu acesso</button>
+        </form>
+        {% else %}
+        <h1>Convite indisponível</h1>
+        {% endif %}
+        {% if erro %}
+        <p class="erro" role="alert">{{ erro }}</p>
+        {% endif %}
+    </main>
+</body>
+</html>

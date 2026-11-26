@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+    <head>
+
+            <meta charset="UTF-8">
+
+            <meta name="viewport"
+                content="width=device-width, initial-scale=1.0">
+
+            <title>Monitor de Impressoras</title>
+
+            <script src="https://cdn.tailwindcss.com"></script>
+            
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4.21">
+        <!--=========================================================
+        CONFIGURAÇÃO GERAL
+        ========================================================= -->
+   
+    </head>
+          
+            <body>
+        <script src="{{ url_for('static', filename='js/menu-state.js') }}?v=1"></script>
+
+
+        <!-- ======================================================
+            MENU PRINCIPAL RECOLHÍVEL
+            ====================================================== -->
+
+            <aside
+    id="menu-lateral"
+    class="fixed inset-y-0 left-0 z-[1050] flex w-[230px] flex-col overflow-y-auto overflow-x-hidden bg-[#0a4527] text-white shadow-xl transition-[width] duration-300
+           [.menu-recolhido_&]:w-[72px]
+           max-md:static max-md:h-auto max-md:w-full max-md:[.menu-recolhido_&]:w-full">
+ 
+    <!-- LOGO E BRASÃO -->
+    <div class="flex items-center gap-3 px-5 pb-5 pt-6 [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0">
+        <div class="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-white ring-4 ring-white/10">
+            <img
+                src="{{ url_for('static', filename='BRASAO_CURVAS-01.png') }}"
+                alt="Brasão da Prefeitura"
+                class="h-9 w-9 object-contain">
+        </div>
+        <div class="leading-tight [.menu-recolhido_&]:hidden">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-white/60">Prefeitura de</p>
+            <p class="text-[15px] font-bold">Rio Branco do Sul</p>
+        </div>
+    </div>
+ 
+    <!-- BARRA DE PESQUISA -->
+    <div
+        onclick="focarPesquisa()"
+        title="Pesquisar impressora"
+        class="mx-4 mb-5 flex h-10 shrink-0 cursor-text items-center gap-2 rounded-lg bg-white/10 px-3 text-white/60 ring-1 ring-white/10 transition focus-within:bg-white/15 focus-within:ring-white/30
+               [.menu-recolhido_&]:mx-auto [.menu-recolhido_&]:w-10 [.menu-recolhido_&]:cursor-pointer [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0 [.menu-recolhido_&]:hover:bg-white/15">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input
+            type="text"
+            id="pesquisa"
+            placeholder="Pesquisar impressora"
+            onkeyup="pesquisarImpressoras()"
+            class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-white outline-none placeholder:text-white/60 [.menu-recolhido_&]:hidden">
+    </div>
+ 
+    <!-- LISTA DE BOTÕES -->
+    <nav class="menu-botoes flex-1 space-y-5 px-3
+                max-md:hidden max-md:[.menu-aberto-mobile_&]:block">
+ 
+        <!-- MONITORAMENTO -->
+        <div class="space-y-0.5">
+            <p class="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-white/45 [.menu-recolhido_&]:hidden">Monitoramento</p>
+ 
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="monitor.view" data-secao="impressoras" onclick="alternarSecaoMenu('impressoras', abrirImpressoras)" type="button" title="Impressoras" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Impressoras</span>
+                <span data-contador="total-impressoras" class="ml-auto text-xs text-white/50 group-aria-pressed/item:text-[#0a4527]/60 [.menu-recolhido_&]:hidden"></span>
+            </button>
+
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="monitor.view" data-secao="offline" onclick="alternarSecaoMenu('offline', carregar_offline)" type="button" title="Offline" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 20h.01M3 3l18 18"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Offline</span>
+                <span data-contador="offline-impressoras" data-alerta
+                    class="ml-auto hidden rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white
+                           [.menu-recolhido_&]:absolute [.menu-recolhido_&]:right-2.5 [.menu-recolhido_&]:top-2 [.menu-recolhido_&]:h-2.5 [.menu-recolhido_&]:w-2.5 [.menu-recolhido_&]:p-0 [.menu-recolhido_&]:text-[0px] [.menu-recolhido_&]:ring-2 [.menu-recolhido_&]:ring-[#0a4527]"></span>
+            </button>
+ 
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="monitor.view" data-secao="toners-baixos" onclick="alternarSecaoMenu('toners-baixos', mostrarTonerBaixo)" type="button" title="Toners baixos" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Toners baixos</span>
+                <span data-contador="toner-baixo" data-alerta
+                    class="ml-auto hidden rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-bold text-amber-950
+                           [.menu-recolhido_&]:absolute [.menu-recolhido_&]:right-2.5 [.menu-recolhido_&]:top-2 [.menu-recolhido_&]:h-2.5 [.menu-recolhido_&]:w-2.5 [.menu-recolhido_&]:p-0 [.menu-recolhido_&]:text-[0px] [.menu-recolhido_&]:ring-2 [.menu-recolhido_&]:ring-[#0a4527]"></span>
+            </button>
+ 
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="monitor.view" data-secao="toners-nao-confiaveis" onclick="alternarSecaoMenu('toners-nao-confiaveis', mostrarTonersNaoConfiaveis)" type="button" title="Toners não confiáveis" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Toners não confiáveis</span>
+            </button>
+        </div>
+ 
+        <!-- Divisória que só aparece com o menu recolhido -->
+        <div class="mx-auto hidden h-px w-8 bg-white/15 [.menu-recolhido_&]:block"></div>
+ 
+        <!-- SUPRIMENTOS -->
+        <div class="space-y-0.5">
+            <p class="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-white/45 [.menu-recolhido_&]:hidden">Suprimentos</p>
+ 
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="stock.view stock.adjust stock.issue toner.create toner.manage" data-secao="estoque" onclick="alternarSecaoMenu('estoque', mostrarEstoque)" type="button" title="Estoque" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13M7 21v-8h10v8M7 17h10"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Estoque</span>
+            </button>
+ 
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="history.view" data-secao="historico" onclick="alternarSecaoMenu('historico', mostrarhistorico)" type="button" title="Histórico" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2M3.05 11a9 9 0 1 1 .5 4M3 4v7h7"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Histórico</span>
+            </button>
+ 
+        </div>
+
+        <!-- Divisória que só aparece com o menu recolhido -->
+        <div class="mx-auto hidden h-px w-8 bg-white/15 [.menu-recolhido_&]:block"></div>
+
+        <!-- RELATÓRIOS -->
+        <div class="space-y-0.5" data-permissoes="monitor.view report.analyze report.approve">
+            <p class="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-white/45 [.menu-recolhido_&]:hidden">Relatórios</p>
+
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="monitor.view" data-secao="relatorio-impressoes" onclick="alternarSecaoMenu('relatorio-impressoes', abrirRelatorioImpressoes)" type="button" title="Relatório de impressões" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Relatório de impressões</span>
+            </button>
+
+            <button class="item-menu group/item relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[14px] font-medium text-white/80 transition hover:bg-white/10 hover:text-white aria-pressed:bg-white aria-pressed:font-semibold aria-pressed:text-[#0a4527] aria-pressed:shadow-sm [&.is-active]:bg-white [&.is-active]:font-semibold [&.is-active]:text-[#0a4527] [.menu-recolhido_&]:justify-center [.menu-recolhido_&]:px-0"
+                data-permissoes="report.analyze report.approve" data-secao="relatorio-printer" onclick="alternarSecaoMenu('relatorio-printer', abrirRelatorioPrinter)" type="button" title="Conferir relatório PRINTER" aria-pressed="false">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></svg>
+                <span class="item-menu-texto truncate [.menu-recolhido_&]:hidden">Relatório PRINTER</span>
+            </button>
+        </div>
+    </nav>
+ 
+    <!-- RODAPÉ: última atualização + recolher -->
+    <div class="mt-4 shrink-0 p-3 max-md:hidden">
+        <div class="mb-2 flex items-center gap-2 rounded-xl bg-white/5 p-3 text-[12px] text-white/60 ring-1 ring-white/10 [.menu-recolhido_&]:hidden">
+            <span class="h-2 w-2 shrink-0 rounded-full bg-green-400 ring-4 ring-green-400/20"></span>
+            <span>Atualizado: <span data-horario-menu></span></span>
+        </div>
+ 
+        <button
+            id="btn-toggle-menu"
+            onclick="alternarMenu()"
+            type="button"
+            title="Recolher menu lateral"
+            aria-label="Recolher menu lateral"
+            aria-expanded="true"
+            class="flex w-full items-center justify-center gap-2 rounded-lg py-2 text-[13px] font-medium text-white/60 transition hover:bg-white/10 hover:text-white">
+            <svg class="h-4 w-4 transition-transform [.menu-recolhido_&]:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+            <span class="texto-toggle [.menu-recolhido_&]:hidden">Recolher menu</span>
+        </button>
+    </div>
+ 
+    <!-- Botão de abrir o menu no celular -->
+    <button
+        type="button"
+        onclick="document.body.classList.toggle('menu-aberto-mobile')"
+        class="mx-3 mb-3 hidden items-center justify-center gap-2 rounded-lg bg-white/10 py-2 text-[13px] font-medium text-white max-md:flex">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Menu
+    </button>   
+ 
+</aside>
+
+        <!-- CONTEÚDO PRINCIPAL (EXPANDE E PREENCHE 100% DA LARGURA DISPONÍVEL) -->
+        <div class="conteudo-principal" id="conteudo-principal">
+
+
+            <!-- ======================================================
+                CABEÇALHO
+            ====================================================== -->
+
+            <div class="cabecalho">
+
+                <div class="cabecalho-identidade">
+                    <h1>
+                        Monitor de Impressoras
+                    </h1>
+                </div>
+
+                <div class="cabecalho-atualizacao">
+                    <span>Conectada como</span>
+                    <strong>{{ usuario.nome }} (@{{ usuario.usuario }})</strong>
+                    <span>Última atualização</span>
+                    <strong id="horario">{{ horario }}</strong>
+                    <form method="post" action="{{ url_for('sair_painel') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="rounded-md border border-white/30 px-2 py-1 text-xs text-white">Sair</button>
+                    </form>
+                </div>
+
+            </div>
+
+
+
+            <div class="container-fluid px-4">
+
+            <section class="painel-titulo" data-permissoes="monitor.view" aria-labelledby="titulo-visao-geral">
+                <h2 id="titulo-visao-geral">Visão geral das impressoras</h2>
+                <p id="subtitulo-visao-geral">Aguardando a primeira coleta dos equipamentos.</p>
+            </section>
+
+            <!-- ======================================================
+            CARTÕES DE INDICADORES
+            ====================================================== -->
+
+            <div class="cartoes" data-permissoes="monitor.view">
+
+            <!-- TOTAL DE IMPRESSORAS -->
+                <button type="button" class="cartao cartao-total" onclick="abrirListaGrafico(null, 'todos')" aria-label="Ver todas as impressoras">
+
+                    <img width="40" height="40" src="https://img.icons8.com/fluency-systems-regular/48/print.png" alt="print"/>
+                    
+                    <div class="cartao-conteudo">
+
+                        <div class="cartao-titulo">
+                            TOTAL DE IMPRESSORAS
+                        </div>
+
+                        <div
+                            class="numero"
+                            id="total-impressoras">
+                            0
+                        </div>
+
+                        <div class="cartao-subtitulo">
+                            Equipamentos cadastrados
+                        </div>
+
+                    </div>
+
+                </button>
+
+
+                <!-- ONLINE -->
+                <button type="button" class="cartao cartao-online" onclick="abrirListaGrafico(null, 'Online')" aria-label="Ver impressoras online">
+
+                   <img width="40" height="40" src="https://img.icons8.com/parakeet-line/48/online.png" alt="online"/>
+
+                    <div class="cartao-conteudo">
+
+                        <div class="cartao-titulo">
+                            ONLINE
+                        </div>
+
+                        <div
+                            class="numero"
+                            id="online-impressoras">
+                            0
+                        </div>
+
+                        <div class="cartao-subtitulo">
+                            Equipamentos funcionando
+                        </div>
+
+                    </div>
+
+                </button>
+
+
+                <!-- OFFLINE -->
+                <button type="button" class="cartao cartao-offline" onclick="abrirListaGrafico(null, 'Offline')" aria-label="Ver impressoras offline">
+
+                    <img width="40" height="40" src="https://img.icons8.com/ios/50/offline.png" alt="offline"/>
+
+                    <div class="cartao-conteudo">
+
+                        <div class="cartao-titulo">
+                            OFFLINE
+                        </div>
+
+                        <div
+                            class="numero"
+                            id="offline-impressoras">
+                            0
+                        </div>
+
+                        <div class="cartao-subtitulo">
+                            Equipamentos sem resposta
+                        </div>
+
+                    </div>
+
+                </button>
+
+
+                <!-- TONER BAIXO -->
+                <button type="button" class="cartao cartao-toner" onclick="abrirListaTonerBaixoPainel()" aria-label="Ver impressoras com toner baixo">
+
+                    <img width="40" height="40" src="https://img.icons8.com/fluency-systems-filled/48/fill-color.png" alt="fill-color"/>
+
+                    <div class="cartao-conteudo">
+
+                        <div class="cartao-titulo">
+                            TONER BAIXO
+                        </div>
+
+                        <div
+                            class="numero"
+                            id="toner-baixo">
+                            —
+                        </div>
+
+                        <div class="cartao-subtitulo">
+                            Atenção necessária
+                        </div>
+
+                    </div>
+
+                </button>
+
+            </div>
+
+            <section class="graficos-painel" data-permissoes="monitor.view" aria-label="Gráficos do monitoramento">
+                <article class="grafico-card grafico-situacao">
+                    <div class="grafico-cabecalho">
+                        <h3>Situação agora</h3>
+                        <p>Impressoras online e offline no momento</p>
+                    </div>
+                    <div class="grafico-rosca-wrap">
+                        <div
+                            class="grafico-rosca"
+                            id="grafico-rosca"
+                            role="img"
+                            onclick="abrirStatusGrafico(event)"
+                            aria-label="Aguardando dados das impressoras">
+                            <div class="grafico-rosca-centro">
+                                <strong id="percentual-online">0%</strong>
+                                <span>online</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grafico-legenda">
+                        <button type="button" onclick="abrirListaGrafico(null, 'Online')" aria-label="Ver impressoras online"><i class="legenda-online"></i>Online: <strong id="legenda-online">0</strong></button>
+                        <button type="button" onclick="abrirListaGrafico(null, 'Offline')" aria-label="Ver impressoras offline"><i class="legenda-offline"></i>Offline: <strong id="legenda-offline">0</strong></button>
+                    </div>
+                </article>
+
+                <article class="grafico-card grafico-setores">
+                    <div class="grafico-cabecalho">
+                        <h3>Impressoras por setor</h3>
+                        <p id="subtitulo-setores">Setores com mais impressoras</p>
+                    </div>
+                    <div id="grafico-setores" class="barras-setores" aria-live="polite">
+                        <p class="grafico-vazio">Aguardando coleta dos equipamentos...</p>
+                    </div>
+                </article>
+            </section>
+
+            <section id="grafico-printer-inicio" data-permissoes="report.analyze" class="grafico-card mb-6" aria-labelledby="titulo-grafico-printer-inicio">
+                <div class="grafico-cabecalho">
+                    <h3 id="titulo-grafico-printer-inicio">Consumo mensal PRINTER</h3>
+                </div>
+                {% set grafico_prefixo = "inicio" %}
+                {% include "_grafico_printer.html" %}
+            </section>
+
+            <!-- ======================================================
+                ÁREA DO ESTOQUE
+            ====================================================== -->
+
+            <div id="area-estoque" data-permissoes="stock.view stock.adjust stock.issue toner.create toner.manage" class="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+
+            <!-- TOPO -->
+            <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h3 class="text-xl font-bold tracking-tight text-gray-900">Estoque de toners</h3>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Consulte os saldos, cadastre toners e registre entradas e saídas.
+                    </p>
+                </div>
+
+                <div class="flex w-full gap-2.5 sm:w-auto">
+                    <button
+                        type="button"
+                        data-permissoes="stock.issue"
+                        onclick="abrirSaidaToner()"
+                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 sm:flex-none">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                        Registrar saída
+                    </button>
+                    <button
+                        type="button"
+                        data-permissoes="toner.create"
+                        onclick="abrirCadastroToner()"
+                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[#0b5cab] bg-[#0b5cab] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#094c8e] sm:flex-none">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                        Cadastrar toner
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABELA DO ESTOQUE -->
+            <div id="area-tabela-estoque" style="display: none;">
+
+                <details class="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <summary class="cursor-pointer text-base font-semibold text-gray-900">Pedidos de toner</summary>
+                    <p class="mt-2 text-sm text-gray-600">A sugestão é gerada às segundas-feiras e pode ser ajustada por quem tem permissão. O envio pede a aprovação do responsável; só solicitações aceitas aparecem para registrar o recebimento.</p>
+                    <p id="pedidos-estoque-status" class="mt-4 text-sm" role="status">Carregando sugestões e pedidos...</p>
+                    <div id="pedidos-estoque" class="mt-4"></div>
+                </details>
+
+                <!-- Busca + filtro -->
+                <div class="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+                    <label class="flex h-10 w-full cursor-text items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-gray-400 focus-within:border-[#0b5cab] focus-within:ring-4 focus-within:ring-[#0b5cab]/10 sm:w-80">
+                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        <input
+                            type="search"
+                            id="busca-estoque"
+                            placeholder="Buscar por código ou modelo"
+                            oninput="filtrarEstoque(this.value)"
+                            class="min-w-0 flex-1 border-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    </label>
+
+                    <div class="inline-flex gap-0.5 rounded-lg bg-gray-100 p-1" role="group" aria-label="Filtrar toners">
+                        <button type="button" aria-pressed="true" onclick="definirTonersInativos(false, this)"
+                            class="rounded-md px-4 py-1.5 text-[13px] font-semibold text-gray-500 aria-pressed:bg-white aria-pressed:text-gray-900 aria-pressed:shadow-sm">
+                            Ativos
+                        </button>
+                        <button type="button" aria-pressed="false" onclick="definirTonersInativos(true, this)"
+                            class="rounded-md px-4 py-1.5 text-[13px] font-semibold text-gray-500 aria-pressed:bg-white aria-pressed:text-gray-900 aria-pressed:shadow-sm">
+                            Todos
+                        </button>
+                    </div>
+
+                    <!-- Escondido, para o script.js continuar funcionando -->
+                    <input type="checkbox" id="mostrar-toners-inativos" hidden>
+                </div>
+
+                <!-- Moldura + tabela -->
+                <p id="estoque-compatibilidade-status" class="mb-3 text-sm text-gray-600" role="status">
+                    Contagem estimada pelo modelo ou família cadastrada, incluindo impressoras offline. Clique na quantidade para ver as impressoras. Um equipamento pode ser compatível com mais de um toner; a contagem não confirma o toner instalado.
+                </p>
+                <div class="overflow-x-auto rounded-xl border border-gray-200">
+                    <table class="w-full border-collapse text-sm
+                        [&_th]:!px-4 [&_th]:!py-3 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-gray-200 [&_th]:bg-gray-50 [&_th]:text-left [&_th]:text-xs [&_th]:font-semibold [&_th]:text-gray-500
+                        [&_td]:!px-4 [&_td]:!py-3.5 [&_td]:border-b [&_td]:border-gray-100 [&_td]:bg-white [&_td]:text-gray-600
+                        [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr:hover_td]:bg-gray-50
+                        [&_td:nth-child(2)]:font-semibold [&_td:nth-child(2)]:text-gray-900
+                        [&_th:last-child]:text-right [&_td:last-child]:text-right
+                        [&_tr.estoque-linha-inativa_td]:opacity-60
+                        [&_tbody_button]:rounded-lg [&_tbody_button]:border [&_tbody_button]:border-gray-200 [&_tbody_button]:bg-white [&_tbody_button]:px-2.5 [&_tbody_button]:py-1 [&_tbody_button]:text-[13px] [&_tbody_button]:text-gray-600 [&_tbody_button:hover]:bg-gray-100
+                        [&_td:last-child_button]:border-transparent [&_td:last-child_button]:text-red-700 [&_td:last-child_button:hover]:bg-red-50">
+                        <thead>
+                            <tr>
+                                <th>Marca</th>
+                                <th>Código</th>
+                                <th>Modelos compatíveis</th>
+                                <th id="estoque-compatibilidade-coluna">Impressoras compatíveis</th>
+                                <th>Cor</th>
+                                <th>Estoque</th>
+                                <th>Estoque mínimo</th>
+                                <th>Situação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-estoque">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Rodapé -->
+                <div class="mt-3 flex justify-between text-[13px] text-gray-500">
+                    <span id="estoque-contagem"></span>
+                    <span id="estoque-contagem-baixo"></span>
+                </div>
+
+            </div>
+
+        </div>
+
+            <!-- ==================================================
+                FORMULÁRIO DE CADASTRO
+            ================================================== -->
+
+            <dialog
+                id="ajuste-estoque"
+                class="ficha-impressora"
+                aria-labelledby="ajuste-estoque-titulo"
+                oncancel="if (this.querySelector('button[type=submit]').disabled) event.preventDefault()">
+                <form onsubmit="salvarAjusteEstoque(event)">
+                    <div class="ficha-impressora-cabecalho">
+                        <div>
+                            <p>Ajuste de estoque</p>
+                            <h2 id="ajuste-estoque-titulo">Ajustar toner</h2>
+                        </div>
+                        <button type="button" class="ficha-impressora-fechar"
+                            onclick="document.getElementById('ajuste-estoque').close()"
+                            aria-label="Fechar ajuste de estoque">×</button>
+                    </div>
+                    <div class="grid gap-4 p-5">
+                        <p id="ajuste-estoque-saldo" class="text-sm text-gray-600"></p>
+                        <label class="grid gap-1 text-sm font-semibold text-gray-700">
+                            Operação
+                            <select id="ajuste-estoque-acao" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                                <option value="entrada">Adicionar ao estoque</option>
+                                <option value="saida">Retirar do estoque</option>
+                            </select>
+                        </label>
+                        <label class="grid gap-1 text-sm font-semibold text-gray-700">
+                            Quantidade
+                            <input id="ajuste-estoque-quantidade" type="number" min="1" max="1000000" step="1" value="1" required
+                                class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                        </label>
+                        <p id="ajuste-estoque-erro" role="alert" class="text-sm text-red-700"></p>
+                        <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white">Confirmar ajuste</button>
+                    </div>
+                </form>
+            </dialog>
+
+            <dialog
+                id="impressoras-compativeis"
+                class="ficha-impressora"
+                aria-labelledby="impressoras-compativeis-titulo">
+                <div class="ficha-impressora-cabecalho">
+                    <div>
+                        <p>Compatibilidade estimada pelo cadastro</p>
+                        <h2 id="impressoras-compativeis-titulo">Impressoras compatíveis</h2>
+                    </div>
+                    <button type="button" class="ficha-impressora-fechar"
+                        onclick="document.getElementById('impressoras-compativeis').close()"
+                        aria-label="Fechar lista de impressoras">×</button>
+                </div>
+                <div class="p-5">
+                    <p class="mb-3 text-sm text-gray-600">A compatibilidade não confirma o toner instalado.</p>
+                    <div id="impressoras-compativeis-lista"></div>
+                </div>
+            </dialog>
+
+            <dialog
+    id="formulario-toner"
+    class="ficha-impressora estoque-modal"
+    aria-labelledby="formulario-toner-titulo">
+
+    <!-- CABEÇALHO (mesmo da ficha) -->
+    <div class="ficha-impressora-cabecalho">
+        <div>
+            <p>Gestão de suprimentos</p>
+            <h2 id="formulario-toner-titulo">Cadastrar toner</h2>
+        </div>
+        <button
+            type="button"
+            class="ficha-impressora-fechar"
+            onclick="fecharCadastroToner()"
+            aria-label="Fechar cadastro">×</button>
+    </div>
+
+    <!-- CORPO -->
+    <div class="space-y-4 bg-white px-5 py-4">
+
+        <!-- 1. IDENTIFICAÇÃO -->
+        <section>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">1. Identificação</p>
+
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr_140px]">
+                <div>
+                    <label for="toner-marca" class="mb-1.5 block text-sm font-medium text-gray-700">Marca</label>
+                    <input
+                        type="text"
+                        id="toner-marca"
+                        placeholder="Intercopy"
+                        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                </div>
+
+                <div>
+                    <label for="toner-codigo" class="mb-1.5 block text-sm font-medium text-gray-700">Código / modelo</label>
+                    <input
+                        type="text"
+                        id="toner-codigo"
+                        placeholder="TK-3162"
+                        class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                </div>
+
+                <div>
+                    <label for="toner-cor" class="mb-1.5 block text-sm font-medium text-gray-700">Cor</label>
+                    <select
+                        id="toner-cor"
+                        class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                        <option value="">Selecione</option>
+                        <option value="Preto">Preto</option>
+                        <option value="Ciano">Ciano</option>
+                        <option value="Magenta">Magenta</option>
+                        <option value="Amarelo">Amarelo</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. ESTOQUE -->
+        <section>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">2. Estoque</p>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label for="toner-estoque" class="mb-1.5 block text-sm font-medium text-gray-700">Quantidade inicial</label>
+                    <div class="flex h-10 items-center overflow-hidden rounded-lg border border-gray-300">
+                        <button type="button"
+                            onclick="document.getElementById('toner-estoque').stepDown()"
+                            class="h-full w-11 bg-gray-50 text-gray-500 hover:bg-gray-100" aria-label="Diminuir">−</button>
+                        <input
+                            type="number"
+                            id="toner-estoque"
+                            min="0"
+                            value="0"
+                            class="h-full min-w-0 flex-1 border-0 text-center text-sm font-semibold text-gray-900 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                        <button type="button"
+                            onclick="document.getElementById('toner-estoque').stepUp()"
+                            class="h-full w-11 bg-gray-50 text-gray-500 hover:bg-gray-100" aria-label="Aumentar">+</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="toner-minimo" class="mb-1.5 block text-sm font-medium text-gray-700">Estoque mínimo</label>
+                    <div class="flex h-10 items-center overflow-hidden rounded-lg border border-gray-300">
+                        <button type="button"
+                            onclick="document.getElementById('toner-minimo').stepDown()"
+                            class="h-full w-11 bg-gray-50 text-gray-500 hover:bg-gray-100" aria-label="Diminuir">−</button>
+                        <input
+                            type="number"
+                            id="toner-minimo"
+                            min="0"
+                            value="1"
+                            class="h-full min-w-0 flex-1 border-0 text-center text-sm font-semibold text-gray-900 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                        <button type="button"
+                            onclick="document.getElementById('toner-minimo').stepUp()"
+                            class="h-full w-11 bg-gray-50 text-gray-500 hover:bg-gray-100" aria-label="Aumentar">+</button>
+                    </div>
+                    <p class="mt-1.5 text-[13px] text-gray-500">Abaixo disso, o toner aparece como "Estoque baixo".</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. COMPATIBILIDADE -->
+        <section>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">3. Compatibilidade</p>
+
+            <label for="toner-modelos" class="mb-1.5 block text-sm font-medium text-gray-700">Modelos compatíveis</label>
+            <input
+                type="text"
+                id="toner-modelos"
+                placeholder="M3655, M3860"
+                class="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+
+            <div class="mt-2 flex gap-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-[13px] leading-relaxed text-blue-900">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                <p>
+                    Separe os modelos por vírgula. A baixa automática acontece quando o nível
+                    do toner sobe de até <strong>10%</strong> para pelo menos <strong>90%</strong>.
+                </p>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-5 py-3">
+        <button
+            type="button"
+            onclick="fecharCadastroToner()"
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+            Cancelar
+        </button>
+        <button
+            type="button"
+            onclick="cadastrarToner()"
+            class="inline-flex items-center gap-2 rounded-lg bg-[#0b5cab] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#094c8e]">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+            Salvar toner
+        </button>
+    </div>
+
+</dialog>
+            <!--==================================
+                SAÍDA DE TONER
+            ================================================== -->
+
+                <dialog
+        id="formulario-saida-toner"
+        class="ficha-impressora estoque-modal"
+        aria-labelledby="formulario-saida-toner-titulo">
+
+        <!-- CABEÇALHO (mesmo da ficha) -->
+        <div class="ficha-impressora-cabecalho">
+            <div>
+                <p>Movimentação de estoque</p>
+                <h2 id="formulario-saida-toner-titulo">Registrar saída</h2>
+            </div>
+            <button
+                type="button"
+                class="ficha-impressora-fechar"
+                onclick="fecharSaidaToner()"
+                aria-label="Fechar registro de saída">×</button>
+        </div>
+
+        <!-- CORPO -->
+        <div class="space-y-6 bg-white px-7 py-6">
+
+            <!-- 1. IMPRESSORA -->
+            <section>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">1. Impressora</p>
+
+                <div class="flex gap-2">
+                    <label class="flex h-11 flex-1 cursor-text items-center gap-2 rounded-lg border border-gray-300 px-3 focus-within:border-[#0b5cab] focus-within:ring-4 focus-within:ring-[#0b5cab]/10">
+                        <svg class="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        <input
+                            type="text"
+                            id="saida-busca-ip"
+                            placeholder="IP da impressora, ex.: 192.168.1.50"
+                            oninput="document.getElementById('saida-ip').value = this.value"
+                            onkeydown="if (event.key === 'Enter') buscarImpressoraSaida()"
+                            class="min-w-0 flex-1 border-0 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    </label>
+                    <button
+                        type="button"
+                        onclick="buscarImpressoraSaida()"
+                        class="h-11 rounded-lg bg-[#0b5cab] px-5 text-sm font-semibold text-white transition hover:bg-[#094c8e]">
+                        Buscar
+                    </button>
+                </div>
+
+                <!-- Resultado da busca (o script.js mostra e preenche) -->
+                <div id="resultado-impressora-saida" class="mt-3" style="display: none;">
+                    <div class="flex items-center gap-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+                        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-green-700 ring-1 ring-green-200">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg>
+                        </div>
+                        <div id="dados-impressora-saida" class="flex-1 text-sm text-green-900"></div>
+                        <span class="rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-green-700 ring-1 ring-green-200">Encontrada</span>
+                    </div>
+                </div>
+
+                <!-- Preenchido pela busca; escondido para não repetir -->
+                <input type="hidden" id="saida-ip">
+            </section>
+
+            <!-- 2. TONER -->
+            <section>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">2. Toner</p>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
+                    <div>
+                        <label for="saida-toner" class="mb-1.5 block text-sm font-medium text-gray-700">Toner</label>
+                        <select
+                            id="saida-toner"
+                            onchange="atualizarEstoqueSaida()"
+                            class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                            <option value="">Selecione o toner</option>
+                        </select>
+                        <small id="saida-estoque-disponivel" class="mt-1.5 block text-[13px] text-gray-500">
+                            Estoque disponível: -
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="saida-quantidade" class="mb-1.5 block text-sm font-medium text-gray-700">Quantidade</label>
+                        <div class="flex h-11 items-center overflow-hidden rounded-lg border border-gray-300">
+                            <button type="button"
+                                onclick="document.getElementById('saida-quantidade').stepDown()"
+                                class="h-full w-10 bg-gray-50 text-gray-500 hover:bg-gray-100" aria-label="Diminuir">−</button>
+                            <input
+                                type="number"
+                                id="saida-quantidade"
+                                min="1"
+                                value="1"
+                                class="h-full w-14 border-0 text-center text-sm font-semibold text-gray-900 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                            <button type="button"
+                                onclick="document.getElementById('saida-quantidade').stepUp()"
+                                class="h-full w-10 bg-gray-50 text-gray-500 hover:bg-gray-100" aria-label="Aumentar">+</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. REGISTRO -->
+            <section>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">3. Registro</p>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-[180px_1fr]">
+                    <div>
+                        <label for="saida-patrimonio" class="mb-1.5 block text-sm font-medium text-gray-700">Patrimônio</label>
+                        <input
+                            type="text"
+                            id="saida-patrimonio"
+                            placeholder="12345"
+                            class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                    </div>
+                    <div>
+                        <label for="saida-responsavel" class="mb-1.5 block text-sm font-medium text-gray-700">Responsável</label>
+                        <input
+                            type="text"
+                            id="saida-responsavel"
+                            placeholder="Nome do responsável"
+                            class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="saida-observacao" class="mb-1.5 block text-sm font-medium text-gray-700">
+                            Observação <span class="font-normal text-gray-400">(opcional)</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="saida-observacao"
+                            placeholder="Troca de toner"
+                            class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b5cab] focus:ring-4 focus:ring-[#0b5cab]/10">
+                    </div>
+                </div>
+                {% if toner_sem_chip_ativo %}
+                <label class="mt-4 flex items-start gap-2 text-sm text-gray-700">
+                    <input type="checkbox" id="saida-troca-sem-chip" class="mt-1">
+                    <span>O toner foi instalado agora em uma impressora sem chip (10.52.0.6 ou 10.6.0.1). Registrar a troca e ler o contador junto com esta saída.</span>
+                </label>
+                {% endif %}
+            </section>
+
+        </div>
+
+        <!-- RODAPÉ -->
+        <div class="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-7 py-4">
+            <button
+                type="button"
+                onclick="fecharSaidaToner()"
+                class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                Cancelar
+            </button>
+            <button
+                type="button"
+                id="botao-salvar-saida"
+                onclick="salvarSaidaToner()"
+                class="inline-flex items-center gap-2 rounded-lg bg-[#0b5cab] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#094c8e]">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+                Registrar saída
+            </button>
+        </div>
+
+    </dialog>
+
+            <section id="area-relatorio-impressoes" data-permissoes="monitor.view" class="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm" style="display: none;" aria-labelledby="titulo-relatorio-impressoes">
+                <h3 id="titulo-relatorio-impressoes" class="text-xl font-bold text-gray-900">Relatório mensal de impressões</h3>
+                <p class="mt-2 text-sm text-gray-600">A diferença entre os contadores do dia 1 e do dia 1 seguinte estima as páginas impressas. Confira os horários das leituras e os equipamentos sem total.</p>
+                <p class="mt-2 text-sm text-gray-600">A aplicação deve estar ligada no dia 1. Se a impressora não responder, a coleta será tentada novamente a cada 30 minutos naquele dia. Leituras não registradas não podem ser recuperadas depois.</p>
+                <p class="mt-2 text-sm text-gray-600">O resultado considera o intervalo entre os horários registrados. Reinicializações do contador podem não ser detectadas se ele voltar a superar o valor inicial.</p>
+                <p class="mt-2 text-sm text-gray-600">A lista também inclui impressoras cadastradas atualmente, mesmo que tenham sido adicionadas depois do mês consultado.</p>
+                <p class="mt-2 text-sm text-gray-600">Nas Kyocera TASKalfa coloridas compatíveis, P&amp;B e níveis de cor somam cópias e impressões, sem fax. Esses valores são coletados separadamente do contador geral e podem não coincidir com ele. Outros modelos ou leituras indisponíveis aparecem sem valores.</p>
+                <form class="mt-4 flex flex-wrap items-end gap-3" onsubmit="carregarRelatorioImpressoes(event)">
+                    <label class="grid gap-1 text-sm font-semibold text-gray-700">Mês de referência
+                        <input id="mes-relatorio-impressoes" type="month" required onchange="alterarMesRelatorioImpressoes()" class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white">Consultar</button>
+                    <a id="baixar-relatorio-impressoes" class="rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700" hidden>Baixar Excel</a>
+                </form>
+                <p id="status-relatorio-impressoes" class="mt-4 text-sm" role="status"></p>
+                <div id="resultado-relatorio-impressoes" class="mt-4" hidden>
+                    <p id="resumo-relatorio-impressoes" class="mb-4 text-sm font-semibold text-gray-700"></p>
+                    <div class="overflow-x-auto rounded-xl border border-gray-200">
+                        <table class="w-full border-collapse text-sm [&_th]:border-b [&_th]:bg-gray-50 [&_th]:p-3 [&_th]:text-left [&_td]:border-b [&_td]:p-3">
+                            <thead><tr><th>Local / modelo</th><th>Setor / patrimônio</th><th>Contador inicial</th><th>Contador final</th><th>Impressões</th><th>Situação</th><th>P&amp;B</th><th>Cor nível 1</th><th>Cor nível 2</th><th>Cor nível 3</th><th>Leituras de cor</th></tr></thead>
+                            <tbody id="corpo-relatorio-impressoes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="area-relatorio-printer" data-permissoes="report.analyze report.approve" class="area-relatorio-printer" style="display: none;" aria-labelledby="titulo-relatorio-printer">
+                <div class="cabecalho-lista">
+                    <h3 id="titulo-relatorio-printer">Conferir relatório PRINTER</h3>
+                    <p class="descricao-secao">
+                        Envie o PDF mensal para comparar números de série e locais com o cadastro atual.
+                        Correções e novas inclusões só serão aplicadas após sua aprovação; o arquivo original será preservado.
+                        Se a série mudou e o IP permaneceu, confirme a substituição para manter o cadastro sem alterações e mencioná-la no e-mail.
+                        Nenhum e-mail será enviado automaticamente.
+                    </p>
+                </div>
+
+                <div class="formulario-relatorio-printer">
+                    <label for="arquivo-relatorio-printer">Relatório mensal em PDF</label>
+                    <div class="acoes-relatorio-printer">
+                        <input
+                            type="file"
+                            id="arquivo-relatorio-printer"
+                            multiple
+                            accept=".pdf,application/pdf"
+                            onchange="limparSubstituicoesRelatorio()"
+                            aria-describedby="ajuda-relatorio-printer">
+                        <button
+                            type="button"
+                            id="botao-analisar-relatorio"
+                            class="botao-analisar-relatorio"
+                            onclick="analisarRelatorioPrinter()">
+                            Analisar relatório
+                        </button>
+                    </div>
+                    <p id="ajuda-relatorio-printer" class="ajuda-relatorio-printer">
+                        Selecione um ou mais PDFs pesquisáveis (até 10 MB no total). A análise não salva os arquivos; use a opção de histórico abaixo.
+                    </p>
+                    <p id="erro-relatorio-printer" class="erro-relatorio-printer" role="alert" hidden></p>
+                    <p id="status-aprovacao-relatorio" class="status-aprovacao-relatorio" role="status" hidden></p>
+                    <div id="avisos-arquivos-relatorio" class="avisos-arquivos-relatorio" role="alert" hidden></div>
+                </div>
+
+                <div class="mt-8 border-t border-gray-200 pt-6">
+                    <h4 class="text-lg font-bold">Histórico e comparação de consumo PRINTER</h4>
+                    <p class="mt-2 text-sm text-gray-600">Salve um PDF por vez para Saúde, Tesouro ou Educação. O total soma cópias e impressões P&amp;B e coloridas; scanner e página/metro linear não entram. O PDF e os dados ficam no banco do sistema, sem criptografia adicional.</p>
+                    <form id="form-historico-printer" class="mt-4 flex flex-wrap items-end gap-3" onsubmit="salvarHistoricoPrinter(event)">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <label class="grid gap-1 text-sm font-semibold">PDF do relatório
+                            <input type="file" name="relatorio" accept=".pdf,application/pdf" required>
+                        </label>
+                        <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white">Salvar no histórico</button>
+                    </form>
+                    <p id="status-historico-printer" class="mt-3 text-sm" role="status"></p>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <label class="grid gap-1 text-sm font-semibold">Primeiro mês
+                            <select id="comparar-printer-a" onchange="mostrarComparacaoPrinter()" class="rounded-lg border border-gray-300 p-2"></select>
+                        </label>
+                        <label class="grid gap-1 text-sm font-semibold">Segundo mês
+                            <select id="comparar-printer-b" onchange="mostrarComparacaoPrinter()" class="rounded-lg border border-gray-300 p-2"></select>
+                        </label>
+                    </div>
+                    <div class="mt-4 overflow-x-auto">
+                        <table class="w-full border-collapse text-sm [&_th]:border-b [&_th]:p-2 [&_th]:text-left [&_td]:border-b [&_td]:p-2">
+                            <thead><tr><th>Setor</th><th>Primeiro mês</th><th>Segundo mês</th><th>Diferença</th></tr></thead>
+                            <tbody id="comparacao-printer"></tbody>
+                        </table>
+                    </div>
+                    <h5 class="mt-5 font-semibold">Relatórios salvos</h5>
+                    <ul id="lista-historico-printer" class="mt-2 space-y-2 text-sm"></ul>
+                </div>
+
+                <div id="resultado-relatorio-printer" class="resultado-relatorio-printer" hidden>
+                    <div id="resumo-relatorio-printer" class="resumo-relatorio-printer" aria-live="polite"></div>
+                    <div id="lista-divergencias-printer" class="lista-divergencias-printer"></div>
+                    <div class="email-relatorio-printer">
+                        <h4>Modelo de e-mail</h4>
+                        <label for="assunto-email-printer">Assunto</label>
+                        <input id="assunto-email-printer" type="text" readonly>
+                        <label for="corpo-email-printer">Mensagem</label>
+                        <textarea id="corpo-email-printer" rows="14" readonly></textarea>
+                        <button type="button" onclick="copiarEmailPrinter()">
+                            Copiar e-mail
+                        </button>
+                        <span id="status-copiar-email-printer" role="status"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================
+                ÁREA DE PASTAS
+            ====================================================== -->
+
+            <div id="area-pastas" data-permissoes="monitor.view">
+
+                <div class="cabecalho-lista">
+
+                    <h3 class="titulo-pastas">
+                        Impressoras por setor
+                    </h3>
+                    <p class="descricao-secao" id="descricao-pastas">
+                          Selecione um setor para consultar as impressoras cadastradas.
+                    </p>
+
+                </div>
+
+
+                <div class="pastas">
+
+                    {% for grupo in grupos %}
+
+                    <button
+                        type="button"
+                        class="pastas"
+                        onclick="abrirPastas('{{ grupo }}')">
+
+                        📁
+
+                        <br>
+
+                        {{ grupo }}
+
+                    </button>
+
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <!--======================================================
+                LISTA DE IMPRESSORAS
+            ====================================================== -->
+
+            <div id="area-lista" data-permissoes="monitor.view">
+
+                <div class="cabecalho-lista">
+
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h3 id="titulo-grupo">Todas as impressoras</h3>
+                        <button
+                            type="button"
+                            data-permissoes="printers.edit"
+                            onclick="abrirCadastroImpressora()"
+                            class="inline-flex items-center gap-2 rounded-lg bg-[#0a4527] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#08391f]">
+                            Cadastrar impressora
+                        </button>
+                    </div>
+                    <p class="descricao-secao" id="descricao-grupo"></p>
+                    <p
+                        id="cadastro-impressora-status"
+                        class="mb-3 text-sm text-green-700"
+                        role="status"
+                        aria-live="polite"
+                        hidden></p>
+
+                    <div class="filtros-impressoras" aria-label="Filtros de impressoras">
+                        <label class="campo-busca-lista">
+                            <span class="sr-only">Buscar impressora</span>
+                            <input
+                                type="search"
+                                id="filtro-impressoras"
+                                placeholder="Buscar por nome, IP ou patrimônio"
+                                oninput="filtrarTabelaDashboard()">
+                        </label>
+                        <label class="campo-setor-lista">
+                            <span class="sr-only">Filtrar por setor</span>
+                            <select id="filtro-setor" onchange="filtrarTabelaDashboard()">
+                                <option value="">Todos os setores</option>
+                            </select>
+                        </label>
+                        <div class="filtro-status" role="group" aria-label="Filtrar por status">
+                            <button type="button" class="is-selected" data-filtro-status="todos" aria-pressed="true" onclick="definirFiltroStatus('todos', this)">Todas</button>
+                            <button type="button" data-filtro-status="Online" aria-pressed="false" onclick="definirFiltroStatus('Online', this)">Online</button>
+                            <button type="button" data-filtro-status="Offline" aria-pressed="false" onclick="definirFiltroStatus('Offline', this)">Offline</button>
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+
+
+                <!-- TABELA -->
+
+                <div class="tabela">
+
+
+                    <table
+                        id="tabela-impressoras"
+                        class="table table-striped table-hover align-middle">
+
+
+                        <thead class="table-dark">
+
+
+                            <tr>
+
+
+                                <th>
+                                    Modelo/Local
+                                </th>
+
+
+                                <th>
+                                    Patrimônio
+                                </th>
+
+
+                                <th>
+                                    IP
+                                </th>
+
+
+                                <th>
+                                    Ciano
+                                </th>
+
+
+                                <th>
+                                    Magenta
+                                </th>
+
+
+                                <th>
+                                    Amarelo
+                                </th>
+
+
+                                <th>
+                                    Preto
+                                </th>
+
+
+                                <th>
+                                    Status
+                                </th>
+
+
+                                <th>
+                                    Alerta
+                                </th>
+
+                                <th>
+                                    Ações
+                                </th>
+
+                            </tr>
+
+
+                        </thead>
+
+
+                        <tbody id="corpo-tabela-impressoras">
+
+                            <tr id="estado-impressoras">
+                                <td colspan="10" class="text-center" role="status">
+                                    Consultando impressoras pela rede...
+                                </td>
+                            </tr>
+
+                            {% for impressora in impressoras %}
+
+
+                            <tr
+
+                                data-grupo="{{ impressora.grupo }}"
+
+                                data-status="{{ impressora.status }}"
+
+                                data-ip="{{ impressora.ip }}"
+
+                                data-modelo="{{ impressora.modelo }}"
+
+                                data-patrimonio="{{ impressora.patrimonio }}"
+
+                                data-setor="{{ impressora.nome_planilha or impressora.modelo }}"
+
+                                role="button"
+
+                                tabindex="0"
+
+                                aria-label="Abrir ficha de {{ impressora.nome_planilha or impressora.modelo }}"
+
+                                onclick="abrirFichaImpressora(this)"
+
+                                onkeydown="abrirFichaImpressoraComTeclado(event, this)"
+
+                            >
+
+
+                                <td>
+
+                                    {{ impressora.modelo }}
+
+                                </td>
+
+
+                                <td>
+
+                                    {{ impressora.patrimonio }}
+
+                                </td>
+
+
+                                <td>
+
+                                    {{ impressora.ip }}
+
+                                </td>
+
+
+                                <!-- CIANO -->
+
+                                <td>
+
+
+                                    {% if impressora.status == "Online" and impressora.ciano != "-" %}
+
+
+                                    <div class="progress toner-bar" data-toner="ciano" >
+
+
+                                        <div
+                                            class="progress-bar bg-info"
+                                            style="width: {{ impressora.ciano }};">
+
+                                            {{ impressora.ciano }}
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                    {% elif impressora.status == "Online" %}
+
+                                    -
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                                <!-- MAGENTA -->
+
+                                <td>
+
+
+                                    {% if impressora.status == "Online" and impressora.magenta != "-" %}
+
+
+                                    <div class="progress toner-bar" data-toner="magenta" >
+
+
+                                        <div
+                                            class="progress-bar bg-danger"
+                                            style="width: {{ impressora.magenta }};">
+
+                                            {{ impressora.magenta }}
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                    {% elif impressora.status == "Online" %}
+
+                                    -
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                                <!-- AMARELO -->
+
+                                <td>
+
+
+                                    {% if impressora.status == "Online" and impressora.amarelo != "-" %}
+
+
+                                    <div class="progress toner-bar" data-toner="amarelo" >
+
+
+                                        <div
+                                            class="progress-bar bg-warning text-dark"
+                                            style="width: {{ impressora.amarelo }};">
+
+                                            {{ impressora.amarelo }}
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                    {% elif impressora.status == "Online" %}
+
+                                    -
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                                <!-- PRETO -->
+
+                                <td>
+
+
+                                    {% if impressora.status == "Online" and impressora.preto != "-" %}
+
+
+                                    <div class="progress toner-bar" data-toner="preto" >
+
+
+                                        <div
+                                            class="progress-bar bg-dark"
+                                            style="width: {{ impressora.preto }};">
+
+                                            {{ impressora.preto }}
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                    {% elif impressora.status == "Online" %}
+
+                                    -
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+
+                                    {% if impressora.status == "Online" %}
+
+
+                                    <span class="badge bg-success">
+
+                                        Online
+
+                                    </span>
+
+
+                                    {% else %}
+
+
+                                    <span class="badge bg-danger">
+
+                                        Offline
+
+                                    </span>
+
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                                <!-- ALERTA -->
+
+                                <td>
+
+
+                                    {% if impressora.status == "Online" and impressora.ciano != "-" and impressora.ciano[:-1]|int <= 20 %}
+
+
+                                    <span class="badge bg-danger">
+
+                                        Ciano baixo
+
+                                    </span>
+
+
+                                    {% elif impressora.status == "Online" and impressora.magenta != "-" and impressora.magenta[:-1]| int<=20%}
+
+                                    <span class="badge bg-danger">
+
+                                            Magenta baixo
+
+                                    </span>   
+
+
+                                    {% elif impressora.status == "Online" and impressora.amarelo != "-" and impressora.amarelo[:-1]|int <= 20 %}
+
+
+                                    <span class="badge bg-danger">
+
+                                        Amarelo baixo
+
+                                    </span>
+
+
+                                    {% elif impressora.status == "Online" and impressora.preto != "-" and impressora.preto[:-1]|int <= 20 %}
+
+
+                                    <span class="badge bg-danger">
+
+                                            Preto baixo
+
+                                    </span>
+
+
+                                    {% elif impressora.status == "Online" %}
+
+
+                                    <span class="badge bg-success">
+
+                                            OK
+
+                                    </span>
+
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                            </tr>
+
+
+                            {% endfor %}
+
+
+                        </tbody>
+
+
+                    </table>
+                    <!-- TABELA DE TONERS NÃO CONFIÁVEIS -->
+
+                    <div
+                        id="area-nao-confiaveis"
+                        data-permissoes="monitor.view"
+                        style="display: none;">
+
+                        <table class="table table-striped table-hover align-middle">
+
+                            <thead class="table-dark">
+
+                                <tr>
+
+                                    <th>Modelo/Local</th>
+                                    <th>IP</th>
+                                    <th>Toner</th>
+                                    <th>Consumo / média</th>
+                                    <th>Status</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="corpo-nao-confiaveis">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+
+            </div>
+
+         
+       
+
+            <script>
+                window.PAINEL_ADMIN = {{ administrador|tojson }};
+                window.PAINEL_PERMISSOES = {{ permissoes|tojson }};
+                window.painelPode = function(permissao) {
+                    return window.PAINEL_ADMIN ||
+                        window.PAINEL_PERMISSOES.includes(permissao);
+                };
+                document.querySelectorAll("[data-permissoes]").forEach(function(elemento) {
+                    var permissoesElemento = elemento.dataset.permissoes.split(/\s+/);
+                    var permitido = window.PAINEL_ADMIN ||
+                        permissoesElemento.some(window.painelPode);
+                    if (!permitido) elemento.hidden = true;
+                });
+                window.addEventListener("load", function() {
+                    if (!window.painelPode("monitor.view")) {
+                        var primeiroMenu = document.querySelector(
+                            "#menu-lateral .item-menu:not([hidden])"
+                        );
+                        if (primeiroMenu) primeiroMenu.click();
+                    }
+                });
+            </script>
+            <script
+                src="{{ url_for('static', filename='js/api.js') }}?v=1.0">
+            </script>
+            <script
+                src="{{ url_for('static', filename='js/script.js') }}?v=4.60">
+            </script>
+            <script src="{{ url_for('static', filename='js/impressoras.js') }}?v=3">  
+
+            </script>
+            
+            <!-- CONTADORES DO MENU -->
+            <script>
+            (function () {
+                function sincronizar() {
+                    document.querySelectorAll('#menu-lateral [data-contador]').forEach(function (alvo) {
+                        var origem = document.getElementById(alvo.dataset.contador);
+                        var texto = origem ? origem.textContent.trim() : "—";
+                        var valor = /^\d+$/.test(texto) ? Number(texto) : null;
+
+                        alvo.textContent = valor === null ? "—" : valor;
+
+                        if (alvo.hasAttribute('data-alerta')) {
+                            alvo.classList.toggle('hidden', valor === 0);
+                        }
+                    });
+
+                    var horario = document.getElementById('horario');
+                    var destino = document.querySelector('#menu-lateral [data-horario-menu]');
+                    if (horario && destino) destino.textContent = horario.textContent.trim();
+                }
+
+                ['total-impressoras', 'offline-impressoras', 'toner-baixo', 'horario'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) new MutationObserver(sincronizar).observe(el, { childList: true, characterData: true, subtree: true });
+                });
+
+                sincronizar();
+            })();
+            </script>
+    
+            
+        </div> <!-- FIM .conteudo-principal -->
+
+        <dialog
+            id="ficha-impressora"
+            class="ficha-impressora"
+            aria-labelledby="ficha-impressora-titulo">
+
+            <div class="ficha-impressora-cabecalho">
+                <div>
+                    <p>Detalhes do equipamento</p>
+                    <h2 id="ficha-impressora-titulo">Impressora</h2>
+                </div>
+                <button
+                    type="button"
+                    class="ficha-impressora-fechar"
+                    onclick="fecharFichaImpressora()"
+                    aria-label="Fechar ficha">×</button>
+            </div>
+
+            <div class="ficha-impressora-dados">
+                <div class="ficha-impressora-campo">
+                    <span>Setor / local</span>
+                    <strong id="ficha-impressora-setor">-</strong>
+                </div>
+                <div class="ficha-impressora-campo">
+                    <span>Endereço IP</span>
+                    <strong id="ficha-impressora-ip">-</strong>
+                </div>
+                <div class="ficha-impressora-campo">
+                    <span>Patrimônio</span>
+                    <strong id="ficha-impressora-patrimonio">-</strong>
+                </div>
+                <div class="ficha-impressora-campo">
+                    <span>Modelo da impressora</span>
+                    <strong id="ficha-impressora-modelo">-</strong>
+                </div>
+                <div class="ficha-impressora-campo">
+                    <span>Status</span>
+                    <strong id="ficha-impressora-status">-</strong>
+                </div>
+                <div class="ficha-impressora-campo">
+                    <span>Modelo do toner compatível</span>
+                    <div id="ficha-impressora-toner">Consultando cadastro...</div>
+                </div>
+                <div class="ficha-impressora-campo ficha-impressora-contador">
+                    <span>Contagem de páginas (SNMP)</span>
+                    <strong id="ficha-impressora-contador" aria-live="polite">
+                        Consultando impressora...
+                    </strong>
+                </div>
+            </div>
+
+            <p
+                id="ficha-impressora-mensagem"
+                class="ficha-impressora-mensagem"
+                role="status"></p>
+
+        </dialog>
+
+        <dialog
+            id="editar-impressora"
+            class="ficha-impressora"
+            aria-labelledby="editar-impressora-titulo">
+            <form onsubmit="salvarEdicaoImpressora(event)">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="ficha-impressora-cabecalho">
+                    <div>
+                        <p>Cadastro do equipamento</p>
+                        <h2 id="editar-impressora-titulo">Editar impressora</h2>
+                    </div>
+                    <button
+                        type="button"
+                        class="ficha-impressora-fechar"
+                        onclick="fecharEdicaoImpressora()"
+                        aria-label="Fechar edição">×</button>
+                </div>
+                <div class="grid gap-4 p-5">
+                    <label
+                        id="cadastro-impressora-ip-campo"
+                        class="hidden grid gap-1 text-sm font-semibold text-gray-700">
+                        Endereço IP
+                        <input
+                            id="cadastro-impressora-ip"
+                            name="ip"
+                            type="text"
+                            inputmode="decimal"
+                            maxlength="45"
+                            placeholder="Ex.: 192.168.1.25"
+                            class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <label class="grid gap-1 text-sm font-semibold text-gray-700">
+                        <span id="cadastro-impressora-nome-rotulo">Nome / local</span>
+                        <input
+                            id="cadastro-impressora-nome"
+                            name="nome"
+                            maxlength="500"
+                            required
+                            class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <label
+                        id="cadastro-impressora-setor-campo"
+                        class="grid gap-1 text-sm font-semibold text-gray-700">
+                        <span id="cadastro-impressora-setor-rotulo">Setor / pasta</span>
+                        <input
+                            id="cadastro-impressora-setor"
+                            name="setor"
+                            maxlength="100"
+                            required
+                            class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <label
+                        id="cadastro-impressora-patrimonio-campo"
+                        class="hidden grid gap-1 text-sm font-semibold text-gray-700">
+                        Patrimônio
+                        <input
+                            id="cadastro-impressora-patrimonio"
+                            name="patrimonio"
+                            maxlength="200"
+                            class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <label
+                        id="cadastro-impressora-serie-campo"
+                        class="grid gap-1 text-sm font-semibold text-gray-700">
+                        Número de série
+                        <input
+                            id="cadastro-impressora-serie"
+                            name="serie"
+                            maxlength="200"
+                            class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <label class="grid gap-1 text-sm font-semibold text-gray-700">
+                        Modelo
+                        <input
+                            id="cadastro-impressora-modelo"
+                            name="modelo"
+                            maxlength="200"
+                            class="rounded-lg border border-gray-300 px-3 py-2 font-normal">
+                    </label>
+                    <p class="text-xs text-gray-500">
+                        <span id="cadastro-impressora-ajuda">O endereço IP e as leituras de monitoramento não são alterados por este formulário.</span>
+                    </p>
+                    <p
+                        id="cadastro-impressora-erro"
+                        class="text-sm text-red-700"
+                        role="alert"></p>
+                    <div class="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            class="rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                            onclick="fecharEdicaoImpressora()">Cancelar</button>
+                        <button
+                            type="submit"
+                            id="cadastro-impressora-salvar"
+                            class="rounded-lg bg-[#0a4527] px-4 py-2 text-sm font-semibold text-white">Salvar alterações</button>
+                    </div>
+                </div>
+                <script src="{{ url_for('static', filename='js/api.js') }}?v=1.0"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}?v=4.61"></script>
+<script src="{{ url_for('static', filename='js/impressoras.js') }}?v=4"></script>
+            </form>
+        </dialog>
+
+    </body>
+
+</html>
+
+</html>

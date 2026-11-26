@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Acesso ao Monitor de Impressoras</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            display: grid;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            place-items: center;
+            background: #f4f6f9;
+            color: #17212b;
+            font-family: Arial, sans-serif;
+        }
+        main {
+            width: min(100%, 400px);
+            padding: 28px;
+            border: 1px solid #e1e6eb;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, .1);
+        }
+        h1 { margin: 0 0 8px; font-size: 1.4rem; }
+        p { margin: 0 0 22px; color: #5b6573; line-height: 1.5; }
+        label { display: block; margin: 16px 0 8px; font-weight: 700; }
+        input, button {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 8px;
+            font: inherit;
+        }
+        input { padding: 10px 12px; border: 1px solid #b8c2cc; }
+        button {
+            margin-top: 16px;
+            border: 0;
+            background: #0a4527;
+            color: white;
+            font-weight: 700;
+        }
+        .erro { margin: 14px 0 0; color: #b42318; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Monitor de Impressoras</h1>
+        <p>Entre com seu usuário e sua senha individual.</p>
+        <form method="post" action="{{ url_for('login_painel') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="usuario">Usuário</label>
+            <input
+                id="usuario"
+                name="usuario"
+                type="text"
+                autocomplete="username"
+                required
+                autofocus>
+            <label for="senha">Senha</label>
+            <input
+                id="senha"
+                name="senha"
+                type="password"
+                autocomplete="current-password"
+                required>
+            <button type="submit">Entrar</button>
+        </form>
+        {% if erro %}
+        <p class="erro" role="alert">{{ erro }}</p>
+        {% endif %}
+        {% if recuperacao_local %}
+        <p><a href="{{ url_for('recuperar_senha_admin') }}">Esqueci a senha da administração</a></p>
+        {% endif %}
+    </main>
+</body>
+</html>

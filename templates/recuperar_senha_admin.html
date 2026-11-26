@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Redefinir senha administrativa</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            display: grid;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            place-items: center;
+            background: #f4f6f9;
+            color: #17212b;
+            font-family: Arial, sans-serif;
+        }
+        main {
+            width: min(100%, 400px);
+            padding: 28px;
+            border: 1px solid #e1e6eb;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, .1);
+        }
+        h1 { margin: 0 0 8px; font-size: 1.4rem; }
+        p { margin: 0 0 22px; color: #5b6573; line-height: 1.5; }
+        label { display: block; margin: 16px 0 8px; font-weight: 700; }
+        input, button {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 8px;
+            font: inherit;
+        }
+        input { padding: 10px 12px; border: 1px solid #b8c2cc; }
+        button {
+            margin-top: 16px;
+            border: 0;
+            background: #0a4527;
+            color: white;
+            font-weight: 700;
+        }
+        .erro { margin: 14px 0 0; color: #b42318; }
+        .sucesso { margin: 14px 0 0; color: #067647; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Redefinir senha administrativa</h1>
+        {% if sucesso %}
+        <p class="sucesso" role="status">Senha redefinida. Volte ao login e entre com a nova senha.</p>
+        <a href="{{ url_for('login_painel') }}">Voltar ao login</a>
+        {% else %}
+        <p>Por segurança, esta redefinição funciona somente neste computador. Escolha uma senha com pelo menos 8 caracteres.</p>
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="senha">Nova senha</label>
+            <input
+                id="senha"
+                name="senha"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                required
+                autofocus>
+            <label for="confirmar_senha">Confirme a nova senha</label>
+            <input
+                id="confirmar_senha"
+                name="confirmar_senha"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                required>
+            <button type="submit">Redefinir senha</button>
+        </form>
+        {% if erro %}
+        <p class="erro" role="alert">{{ erro }}</p>
+        {% endif %}
+        {% endif %}
+    </main>
+</body>
+</html>

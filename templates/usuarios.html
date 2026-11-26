@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Gerenciar acessos - Monitor de Impressoras</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #f3f6f8;
+            color: #17212b;
+            font-family: Arial, sans-serif;
+        }
+        main { width: min(100%, 1100px); margin: 0 auto; }
+        header, section {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #dfe7ec;
+            border-radius: 12px;
+            background: #fff;
+        }
+        header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        h1, h2, p { margin-top: 0; }
+        h1 { margin-bottom: 6px; font-size: 1.5rem; }
+        h2 { font-size: 1.15rem; }
+        .muted { color: #637381; }
+        .top-actions, .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        a, button {
+            display: inline-flex;
+            min-height: 40px;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 13px;
+            border: 1px solid #cbd6de;
+            border-radius: 7px;
+            background: #fff;
+            color: #17324d;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        button.primary { border-color: #0a6b3b; background: #0a6b3b; color: #fff; }
+        button.danger { border-color: #efcaca; color: #a32626; }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            min-height: 42px;
+            padding: 8px 10px;
+            border: 1px solid #bdc9d2;
+            border-radius: 7px;
+            font: inherit;
+        }
+        .field { max-width: 460px; margin-bottom: 16px; }
+        .field label { display: block; margin-bottom: 6px; font-weight: 700; }
+        .permissions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 8px 16px;
+            margin: 12px 0 18px;
+        }
+        .permissions label { display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+        .permissions input { margin-top: 3px; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 11px 9px; border-bottom: 1px solid #e7edf1; text-align: left; vertical-align: top; }
+        th { color: #526574; font-size: .82rem; }
+        details { min-width: 240px; }
+        details summary { cursor: pointer; color: #165c3a; font-weight: 700; }
+        .invite-link { overflow-wrap: anywhere; }
+        .message { padding: 11px 13px; border-radius: 8px; background: #edf7f0; color: #155b32; }
+        .error { background: #fff1f0; color: #a32626; }
+        .online-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .online-person { padding: 7px 10px; border-radius: 999px; background: #e8f5ec; color: #17613a; }
+        .inline-form { display: inline; }
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            header { align-items: flex-start; flex-direction: column; }
+            header, section { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <div>
+            <h1>Gerenciar acessos</h1>
+            <p class="muted">Prepare cada conta e suas permissões antes de compartilhar o convite.</p>
+        </div>
+        <nav class="top-actions">
+            <a href="{{ url_for('index') }}">Voltar ao painel</a>
+            <form method="post" action="{{ url_for('sair_painel') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit">Sair</button>
+            </form>
+        </nav>
+    </header>
+
+    {% if mensagem %}
+    <p class="message {% if 'expirou' in mensagem or 'Informe' in mensagem or 'Selecione' in mensagem %}error{% endif %}" role="status">{{ mensagem }}</p>
+    {% endif %}
+    {% if convite_criado %}
+    <section>
+        <h2>Link individual pronto para enviar</h2>
+        <p class="muted">O link expira em 48 horas e só pode ser usado uma vez. Ele dá acesso somente às permissões selecionadas.</p>
+        <p class="invite-link"><a href="{{ convite_criado }}" rel="noreferrer">{{ convite_criado }}</a></p>
+        <button type="button" onclick="navigator.clipboard.writeText(document.querySelector('.invite-link a').href)">Copiar link</button>
+        <p class="muted">Compartilhe por um canal confiável. Quem receber poderá definir o próprio usuário e senha.</p>
+    </section>
+    {% endif %}
+
+    <section aria-labelledby="online-title">
+        <h2 id="online-title">Pessoas acessando agora <span id="online-count"></span></h2>
+        <div id="online-list" class="online-list" aria-live="polite">
+            <span class="muted">Carregando presença...</span>
+        </div>
+        <p class="muted">Consideramos online quem usou o painel nos últimos 2 minutos.</p>
+    </section>
+
+    <section>
+        <h2>Preparar convite individual</h2>
+        <p class="muted">Escolha a tela e as ações liberadas para esta pessoa. O cadastro não dá acesso administrativo.</p>
+        <form method="post" action="{{ url_for('criar_convite_painel') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="field">
+                <label for="nome">Nome da pessoa</label>
+                <input id="nome" name="nome" type="text" maxlength="100" required>
+            </div>
+            <h3>Permissões para esta conta</h3>
+            <div class="permissions">
+                {% for chave, rotulo in permissoes_disponiveis.items() %}
+                <label>
+                    <input type="checkbox" name="permissoes" value="{{ chave }}">
+                    <span>{{ rotulo }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <button class="primary" type="submit">Gerar link com estas permissões</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Contas cadastradas</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Pessoa</th><th>Usuário</th><th>Status</th><th>Permissões</th><th>Alterações</th></tr>
+                </thead>
+                <tbody>
+                    {% for conta in usuarios %}
+                    <tr>
+                        <td>{{ conta.nome }}{% if conta.administrador %}<br><strong>Administradora</strong>{% endif %}</td>
+                        <td>{{ conta.usuario }}</td>
+                        <td>
+                            {% if conta.administrador %}
+                            Administradora
+                            {% elif not conta.ativo %}
+                            Desativada
+                            {% elif conta.ultimo_acesso and conta.ultimo_acesso >= limite_online %}
+                            Online
+                            {% else %}
+                            Ativa
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if conta.administrador %}
+                            Acesso total
+                            {% else %}
+                            <details>
+                                <summary>Editar permissões</summary>
+                                <form method="post" action="{{ url_for('alterar_permissoes_usuario_painel', usuario_id=conta.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <div class="permissions">
+                                        {% for chave, rotulo in permissoes_disponiveis.items() %}
+                                        <label>
+                                            <input type="checkbox" name="permissoes" value="{{ chave }}" {% if chave in conta.permissoes %}checked{% endif %}>
+                                            <span>{{ rotulo }}</span>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                    <button type="submit">Salvar permissões</button>
+                                </form>
+                            </details>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not conta.administrador %}
+                            <form method="post" action="{{ url_for('alterar_status_usuario_painel', usuario_id=conta.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="ativo" value="{{ 0 if conta.ativo else 1 }}">
+                                <button class="{% if conta.ativo %}danger{% endif %}" type="submit">
+                                    {{ "Desativar" if conta.ativo else "Reativar" }}
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5">Nenhuma conta cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>Convites pendentes</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Pessoa</th><th>Expira em</th><th>Ação</th></tr></thead>
+                <tbody>
+                    {% for convite in convites %}
+                    <tr>
+                        <td>{{ convite.nome }}</td>
+                        <td>{{ convite.expira_em }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('cancelar_convite_painel', convite_id=convite.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button class="danger" type="submit">Cancelar convite</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3">Não há convites pendentes.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<script src="{{ url_for('static', filename='js/api.js') }}?v=1.0"></script>
+<script>
+async function atualizarPresenca() {
+    const lista = document.getElementById("online-list");
+    const contagem = document.getElementById("online-count");
+    try {
+        const resposta = await api.buscarPresencaUsuarios("{{ url_for('presenca_usuarios_painel') }}");
+        if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+        const pessoas = await resposta.json();
+        contagem.textContent = `(${pessoas.length})`;
+        lista.replaceChildren();
+        if (!pessoas.length) {
+            const vazio = document.createElement("span");
+            vazio.className = "muted";
+            vazio.textContent = "Nenhuma outra atividade recente.";
+            lista.appendChild(vazio);
+            return;
+        }
+        pessoas.forEach(pessoa => {
+            const item = document.createElement("span");
+            item.className = "online-person";
+            item.textContent = `${pessoa.nome} (@${pessoa.usuario})`;
+            lista.appendChild(item);
+        });
+    } catch (erro) {
+        console.error("Não foi possível atualizar a presença:", erro);
+        lista.textContent = "Não foi possível carregar a presença agora.";
+    }
+}
+atualizarPresenca();
+setInterval(atualizarPresenca, 30000);
+</script>
+</body>
+</html>
