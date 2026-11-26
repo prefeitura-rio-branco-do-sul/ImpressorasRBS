@@ -21,6 +21,9 @@
 /.relatorio_locais_equivalentes.json
 /Untitled-1.txt
 
+# Pastas de configuração (ex.: configurações do editor ou do projeto)
+configuracao/
+
 # Office lock files
 ~$*
 
