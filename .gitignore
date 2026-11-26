@@ -22,7 +22,7 @@
 /Untitled-1.txt
 
 # Pastas de configuração (ex.: configurações do editor ou do projeto)
-configuracao/
+/configuracaoes.py
 
 # Office lock files
 ~$*
